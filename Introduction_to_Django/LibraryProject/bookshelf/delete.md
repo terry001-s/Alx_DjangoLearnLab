@@ -1,5 +1,5 @@
 Command:
-b = Book.objects.get(title="Nineteen Eighty-Four")
-b.delete()
+book = Book.objects.get(title="Nineteen Eighty-Four")
+book.delete()
 
 Book.objects.all()
