@@ -1,8 +1,10 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.detail import DetailView
-from .models import Library
-from .models import Book
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.decorators import login_required, user_passes_test
 
+from .models import Library, Book, UserProfile
 
 
 # --- Function-based view for listing all books ---
@@ -10,17 +12,15 @@ def list_books(request):
     books = Book.objects.all()
     return render(request, 'relationship_app/list_books.html', {'books': books})
 
+
 # --- Class-based view for library details ---
 class LibraryDetailView(DetailView):
     model = Library
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
 
-    # --- Authentication Views ---
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+
+# --- Authentication Views ---
 
 # User Registration
 def register_view(request):
@@ -34,6 +34,7 @@ def register_view(request):
         form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
 
+
 # User Login
 def login_view(request):
     if request.method == 'POST':
@@ -46,6 +47,7 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'relationship_app/login.html', {'form': form})
 
+
 # User Logout
 @login_required
 def logout_view(request):
@@ -53,9 +55,7 @@ def logout_view(request):
     return render(request, 'relationship_app/logout.html')
 
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import user_passes_test
-from .models import UserProfile
+# --- Role-Based Access Control Views ---
 
 # Helper functions to test roles
 def is_admin(user):
@@ -68,6 +68,7 @@ def is_member(user):
     return hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
 
 
+# --- Admin, Librarian, and Member Views ---
 @user_passes_test(is_admin)
 def admin_view(request):
     return render(request, 'relationship_app/admin_view.html')
@@ -81,4 +82,3 @@ def librarian_view(request):
 @user_passes_test(is_member)
 def member_view(request):
     return render(request, 'relationship_app/member_view.html')
-
