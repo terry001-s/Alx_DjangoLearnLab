@@ -11,5 +11,15 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('relationship_app/', include('relationship_app.urls')),  # include app URLs
+     path('', include('relationship_app.urls')),  # include app URLs
+]
+
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path('logout/', views.logout_view, name='logout'),
 ]
