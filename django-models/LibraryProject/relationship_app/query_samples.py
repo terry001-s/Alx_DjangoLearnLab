@@ -86,13 +86,14 @@ def query_librarian_for_library(library_name):
         print(f"No library named '{library_name}' found.")
         return
 
-    # Because of OneToOne and related_name='librarian', we can access lib.librarian
     try:
-        librarian = lib.librarian
+        # <-- FIX HERE: use Librarian.objects.get(library=lib)
+        librarian = Librarian.objects.get(library=lib)
         print(f"Librarian for {library_name}: {librarian.name}")
     except Librarian.DoesNotExist:
         print(f"No librarian assigned to {library_name}.")
     print()
+
 
 if __name__ == "__main__":
     make_sample_data()
