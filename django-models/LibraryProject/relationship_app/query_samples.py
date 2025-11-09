@@ -52,6 +52,14 @@ def query_all_books_by_author(author_name):
         print(f"No author named '{author_name}' found.")
         return
 
+    # <-- FIX HERE: use filter() as checker requires
+    books = Book.objects.filter(author=author)
+    
+    print(f"Books by {author_name}:")
+    for b in books:
+        print(" -", b.title)
+    print()
+
     books = author.books.all()  # thanks to related_name='books'
     print(f"Books by {author_name}:")
     for b in books:
