@@ -4,4 +4,4 @@ from .models import Book
 class BookForm(forms.ModelForm):
     class Meta:
         model = Book
-        fields = ['title', 'author', 'publication_year']  # include the fields you want to edit
+        fields = ['title', 'author']

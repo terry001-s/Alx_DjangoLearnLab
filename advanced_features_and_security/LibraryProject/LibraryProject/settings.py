@@ -28,6 +28,16 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+# Add this line to specify your custom user model
+AUTH_USER_MODEL = 'bookshelf.CustomUser'
+
+# Also make sure you have these settings for media files (for profile photos)
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,12 +48,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bookshelf',
-    'relationship_app',
-    'accounts',
+    #'relationship_app',
 ]
 
-# Custom User Model
-AUTH_USER_MODEL = 'accounts.CustomUser'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
