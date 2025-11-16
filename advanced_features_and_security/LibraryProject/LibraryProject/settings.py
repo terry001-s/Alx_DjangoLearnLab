@@ -64,6 +64,10 @@ X_FRAME_OPTIONS = 'DENY'
 # Security: Prevent MIME type sniffing
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
+# Secure Headers
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 # Security: Ensure cookies are only sent over HTTPS (set to True in production with SSL)
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
@@ -190,3 +194,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
