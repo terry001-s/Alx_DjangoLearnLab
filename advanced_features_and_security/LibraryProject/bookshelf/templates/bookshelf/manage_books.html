@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Books</title>
+</head>
+<body>
+    <h1>Manage Books</h1>
+    <p>This page requires both create and delete permissions.</p>
+    <ul>
+        {% for book in books %}
+            <li>{{ book.title }} by {{ book.author }}</li>
+        {% empty %}
+            <li>No books to manage.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
