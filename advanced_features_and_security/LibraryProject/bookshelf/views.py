@@ -5,10 +5,59 @@ from django.contrib import messages
 from django.db.models import Q
 from django.utils.html import escape
 from .models import Book, CustomUser
+from .forms import ExampleForm, SecureBookForm 
 import logging
 
 # Security: Set up logging for security events
 logger = logging.getLogger(__name__)
+
+def example_form_view(request):
+    """
+    View demonstrating secure form handling with ExampleForm.
+    Shows proper CSRF protection, input validation, and sanitization.
+    """
+    if request.method == 'POST':
+        # Security: CSRF protection is automatically handled by Django middleware
+        form = ExampleForm(request.POST)
+        
+        if form.is_valid():
+            # Security: Form data is now cleaned and validated
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            category = form.cleaned_data['category']
+            age = form.cleaned_data['age']
+            message = form.cleaned_data['message']
+            
+            # Security: Log form submission (without sensitive data)
+            logger.info(f"ExampleForm submitted by: {email} for category: {category}")
+            
+            # Security: Success message with escaped user input
+            messages.success(
+                request, 
+                f"Thank you, {escape(name)}! Your {category} submission was received."
+            )
+            
+            # In a real application, you would process the form data here
+            # For example: save to database, send email, etc.
+            
+            return redirect('example_form_success')
+        else:
+            # Security: Form errors are automatically escaped by Django
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = ExampleForm()
+    
+    context = {
+        'form': form,
+        'title': 'Example Form with Security Features'
+    }
+    return render(request, 'bookshelf/example_form.html', context)
+
+def example_form_success(request):
+    """Success page after form submission."""
+    return render(request, 'bookshelf/example_form_success.html')
+
+# ... rest of your existing views (book_list, create_book, etc.) ...
 
 @permission_required('bookshelf.can_create')
 def book_list(request):

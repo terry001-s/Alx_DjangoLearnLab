@@ -8,5 +8,6 @@ urlpatterns = [
     path('raise-exception/', views.raise_exception, name='raise_exception'),
     path('books-view/', views.books, name='books'),
     path('api/search/', views.safe_search_api, name='safe_search_api'),
-    path('manage-books/', views.manage_books, name='manage_books'),
+    path('example-form/', views.example_form_view, name='example_form_view'),
+    path('example-form/success/', views.example_form_success, name='example_form_success'),
 ]

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        .form-control { margin-bottom: 15px; padding: 8px; width: 100%; }
+        .error { color: red; font-size: 0.9em; }
+        .help-text { color: #666; font-size: 0.8em; }
+        .form-group { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <p>This form demonstrates secure form handling with CSRF protection, input validation, and sanitization.</p>
+    
+    <!-- Security: Form with CSRF token protection -->
+    <form method="post" novalidate>
+        {% csrf_token %}  <!-- CSRF protection token -->
+        
+        <div class="form-group">
+            {{ form.name.label_tag }}
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="error">{{ form.name.errors }}</div>
+            {% endif %}
+            <div class="help-text">{{ form.name.help_text }}</div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div class="error">{{ form.email.errors }}</div>
+            {% endif %}
+            <div class="help-text">{{ form.email.help_text }}</div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.category.label_tag }}
+            {{ form.category }}
+            {% if form.category.errors %}
+                <div class="error">{{ form.category.errors }}</div>
+            {% endif %}
+            <div class="help-text">{{ form.category.help_text }}</div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.age.label_tag }}
+            {{ form.age }}
+            {% if form.age.errors %}
+                <div class="error">{{ form.age.errors }}</div>
+            {% endif %}
+            <div class="help-text">{{ form.age.help_text }}</div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.message.label_tag }}
+            {{ form.message }}
+            {% if form.message.errors %}
+                <div class="error">{{ form.message.errors }}</div>
+            {% endif %}
+            <div class="help-text">{{ form.message.help_text }}</div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.agree_to_terms }}
+            {{ form.agree_to_terms.label }}
+            {% if form.agree_to_terms.errors %}
+                <div class="error">{{ form.agree_to_terms.errors }}</div>
+            {% endif %}
+            <div class="help-text">{{ form.agree_to_terms.help_text }}</div>
+        </div>
+        
+        <button type="submit">Submit Securely</button>
+    </form>
+
+    <!-- Security: Display messages safely -->
+    {% if messages %}
+    <div class="messages" style="margin-top: 20px;">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message|escape }}  <!-- Security: Escape message content -->
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <hr>
+    <h3>Security Features Demonstrated:</h3>
+    <ul>
+        <li>CSRF Token Protection</li>
+        <li>Input Validation (server-side and client-side)</li>
+        <li>Input Sanitization and Escaping</li>
+        <li>XSS Prevention</li>
+        <li>Secure Form Rendering</li>
+    </ul>
+</body>
+</html>

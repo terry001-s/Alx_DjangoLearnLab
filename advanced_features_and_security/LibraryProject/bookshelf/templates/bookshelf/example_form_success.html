@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Submitted Successfully</title>
+</head>
+<body>
+    <h1>Form Submitted Successfully!</h1>
+    <p>Thank you for your submission. Your data has been processed securely.</p>
+    
+    <!-- Security: Display messages safely -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message|escape }}  <!-- Security: Escape message content -->
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <a href="{% url 'example_form_view' %}">Submit another form</a>
+</body>
+</html>
