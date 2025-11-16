@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-k+^t9b#jrq9ztd#*m_ubsn)pyp09%80psl$eimmmd^8ee#$yf9'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-secret-key-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.yourdomain.com']
 
 
 # Add this line to specify your custom user model
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'csp',
     #'relationship_app',
     ]
 
@@ -50,6 +51,50 @@ import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+
+
+# ==================== SECURITY SETTINGS ====================
+
+# Security: Prevent XSS attacks by enabling browser XSS filter
+SECURE_BROWSER_XSS_FILTER = True
+
+# Security: Prevent clickjacking by denying frame embedding
+X_FRAME_OPTIONS = 'DENY'
+
+# Security: Prevent MIME type sniffing
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Security: Ensure cookies are only sent over HTTPS (set to True in production with SSL)
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+# Security: CSRF cookie settings
+CSRF_COOKIE_HTTPONLY = True
+CSRF_USE_SESSIONS = True
+
+# Security: Session cookie settings
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+
+# Security: Redirect HTTP to HTTPS (enable when using SSL)
+SECURE_SSL_REDIRECT = False  # Set to True in production with SSL
+
+# Security: HSTS settings (enable in production with SSL)
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Security: Referrer policy
+SECURE_REFERRER_POLICY = 'same-origin'
+
+# For development, you might want to override some settings
+if os.environ.get('DJANGO_DEVELOPMENT'):
+    DEBUG = True
+    ALLOWED_HOSTS = ['*']  # Less restrictive for development
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -58,7 +103,19 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'csp.middleware.CSPMiddleware', 
 ]
+
+# Content Security Policy settings
+CSP_DEFAULT_SRC = ["'self'"]
+CSP_SCRIPT_SRC = ["'self'"]
+CSP_STYLE_SRC = ["'self'"]
+CSP_IMG_SRC = ["'self'", "data:"]
+CSP_FONT_SRC = ["'self'"]
+CSP_CONNECT_SRC = ["'self'"]
+CSP_OBJECT_SRC = ["'none'"]
+CSP_BASE_URI = ["'self'"]
+CSP_FRAME_ANCESTORS = ["'none'"]  # Equivalent to X-Frame-Options: DENY
 
 ROOT_URLCONF = 'LibraryProject.urls'
 
@@ -126,6 +183,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

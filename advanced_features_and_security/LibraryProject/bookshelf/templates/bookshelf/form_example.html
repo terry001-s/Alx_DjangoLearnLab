@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Form</title>
+    <!-- Security: CSP would be implemented here in production -->
+</head>
+<body>
+    <h1>Add a New Book</h1>
+    
+    <!-- Security: CSRF token protection for all forms -->
+    <form method="post">
+        {% csrf_token %}  <!-- CSRF protection token -->
+        
+        <div>
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" required maxlength="200">
+        </div>
+        
+        <div>
+            <label for="author">Author:</label>
+            <input type="text" id="author" name="author" required maxlength="100">
+        </div>
+        
+        <div>
+            <label for="publication_year">Publication Year:</label>
+            <input type="number" id="publication_year" name="publication_year" 
+                   min="1000" max="{% now 'Y' %}" required>
+        </div>
+        
+        <button type="submit">Add Book</button>
+    </form>
+
+    <!-- Security: Input validation feedback -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html>

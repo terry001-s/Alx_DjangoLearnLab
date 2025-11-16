@@ -1,16 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book List</title>
+    <!-- Security: Content would be restricted by CSP in production -->
 </head>
 <body>
     <h1>Book List</h1>
+    
+    <!-- Security: Search form with CSRF protection -->
+    <form method="get" action="{% url 'book_list' %}">
+        <input type="text" name="q" placeholder="Search books..." 
+               value="{{ request.GET.q }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Security: Display user input safely with auto-escaping -->
+    {% if query %}
+        <p>Search results for: <strong>{{ query|escape }}</strong></p>
+    {% endif %}
+
     <ul>
         {% for book in books %}
-            <li>{{ book.title }} by {{ book.author }} ({{ book.publication_year }})</li>
+            <li>
+                <!-- Security: Auto-escaping prevents XSS from book data -->
+                <strong>{{ book.title|escape }}</strong> by 
+                {{ book.author|escape }} ({{ book.publication_year }})
+            </li>
         {% empty %}
             <li>No books available.</li>
         {% endfor %}
     </ul>
+
+    <!-- Security: Delete form with CSRF protection -->
+    {% if perms.bookshelf.can_delete %}
+    <h2>Manage Books</h2>
+    <form method="post" action="{% url 'delete_book' %}">
+        {% csrf_token %}  <!-- CSRF protection token -->
+        <select name="book_id">
+            {% for book in books %}
+                <option value="{{ book.id }}">{{ book.title|escape }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" onclick="return confirm('Are you sure?')">Delete Book</button>
+    </form>
+    {% endif %}
 </body>
 </html>
