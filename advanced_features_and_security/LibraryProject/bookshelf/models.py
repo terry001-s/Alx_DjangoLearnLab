@@ -12,6 +12,12 @@ class CustomUser(AbstractUser):
     
     def __str__(self):
         return self.username
+    
+    class Meta:
+        permissions = [
+            ("can_create", "Can create items"),
+            ("can_delete", "Can delete items"),
+        ]
 
 class Book(models.Model):
     title = models.CharField(max_length=200)
@@ -20,3 +26,9 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.title} by {self.author} ({self.publication_year})"
+    
+    class Meta:
+        permissions = [
+            ("can_create", "Can create books"),
+            ("can_delete", "Can delete books"),
+        ]
