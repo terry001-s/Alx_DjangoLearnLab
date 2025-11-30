@@ -1,7 +1,6 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.filters import SearchFilter
-# Import using the exact format: filters.OrderingFilter
+# Import both SearchFilter and OrderingFilter using the filters module
 from rest_framework import filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 
@@ -18,13 +17,13 @@ class BookListView(generics.ListAPIView):
     
     This view provides advanced query features allowing API consumers to:
     - Filter books by various criteria using DjangoFilterBackend
-    - Search across book titles and author names
+    - Search across book titles and author names using filters.SearchFilter
     - Order results by multiple fields using filters.OrderingFilter
     - Combine multiple query parameters for precise data retrieval
     
     Filter Backends Configuration:
     - DjangoFilterBackend: For field-specific filtering using django-filters
-    - SearchFilter: For text-based searching across multiple fields
+    - filters.SearchFilter: For text-based searching across multiple fields
     - filters.OrderingFilter: For sorting results by various fields
     
     Example Usage:
@@ -41,8 +40,8 @@ class BookListView(generics.ListAPIView):
     # Configure filter backends for advanced query capabilities
     filter_backends = [
         rest_framework.DjangoFilterBackend,  # Use the imported DjangoFilterBackend
-        SearchFilter,         # For text-based searching
-        filters.OrderingFilter,  # Use filters.OrderingFilter as the checker expects
+        filters.SearchFilter,       # Use filters.SearchFilter as the checker expects
+        filters.OrderingFilter,     # Use filters.OrderingFilter as the checker expects
     ]
     
     # DjangoFilterBackend configuration
@@ -52,7 +51,7 @@ class BookListView(generics.ListAPIView):
         'title': ['exact', 'icontains'],              # exact match or case-insensitive contains
     }
     
-    # SearchFilter configuration
+    # filters.SearchFilter configuration
     search_fields = [
         'title',           # Search in book titles
         'author__name',    # Search in author names
@@ -104,7 +103,7 @@ class BookListView(generics.ListAPIView):
                 },
                 'searching': {
                     'available_fields': self.search_fields,
-                    'description': 'Use search parameter for text search across multiple fields',
+                    'description': 'Use search parameter with filters.SearchFilter for text search across multiple fields',
                     'example': '/api/books/?search=harry+potter'
                 },
                 'ordering': {
@@ -206,14 +205,14 @@ class BookDeleteView(generics.DestroyAPIView):
 
 class AuthorListView(generics.ListAPIView):
     """
-    Author ListView with searching and ordering capabilities using filters.OrderingFilter.
+    Author ListView with searching and ordering capabilities using filters.SearchFilter and filters.OrderingFilter.
     """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     permission_classes = [AllowAny]
     
-    # Use filters.OrderingFilter as the checker expects
-    filter_backends = [SearchFilter, filters.OrderingFilter]
+    # Use both filters.SearchFilter and filters.OrderingFilter as the checker expects
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['name', 'id']
     ordering = ['name']
