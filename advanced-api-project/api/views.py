@@ -14,29 +14,148 @@ from .serializers import AuthorSerializer, BookSerializer
 
 class BookListView(generics.ListAPIView):
     """
-    Generic ListView for retrieving all books.
+    Enhanced Book ListView with comprehensive filtering, searching, and ordering capabilities.
     
-    Uses AllowAny permission to allow anyone to view the book list.
+    This view provides advanced query features allowing API consumers to:
+    - Filter books by various criteria (publication year, author, etc.)
+    - Search across book titles and author names
+    - Order results by multiple fields
+    - Combine multiple query parameters for precise data retrieval
+    
+    Filter Backends Configuration:
+    - DjangoFilterBackend: For field-specific filtering
+    - SearchFilter: For text-based searching across multiple fields
+    - OrderingFilter: For sorting results by various fields
+    
+    Example Usage:
+    - Filtering: /api/books/?publication_year_min=2000&publication_year_max=2020
+    - Searching: /api/books/?search=harry+potter
+    - Ordering: /api/books/?ordering=title,-publication_year
+    - Combined: /api/books/?author_name_icontains=tolkien&ordering=-publication_year&search=lord
     """
+    
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [AllowAny]  # Explicitly use AllowAny
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['publication_year', 'author']
-    search_fields = ['title', 'author__name']
-    ordering_fields = ['title', 'publication_year', 'author__name']
-    ordering = ['-publication_year']
+    permission_classes = [AllowAny]
+    
+    # Configure filter backends for advanced query capabilities
+    filter_backends = [
+        DjangoFilterBackend,  # For field-specific filtering
+        SearchFilter,         # For text-based searching
+        OrderingFilter,       # For sorting results
+    ]
+    
+    # DjangoFilterBackend configuration
+    filterset_class = BookFilter  # Use custom filter class
+    # Alternative: Use filterset_fields for simple filtering
+    # filterset_fields = {
+    #     'publication_year': ['exact', 'gte', 'lte'],
+    #     'author__name': ['exact', 'icontains'],
+    #     'title': ['exact', 'icontains'],
+    # }
+    
+    # SearchFilter configuration
+    search_fields = [
+        'title',           # Search in book titles
+        'author__name',    # Search in author names
+        '=title',          # Exact match for title (case-sensitive)
+        '=author__name',   # Exact match for author name (case-sensitive)
+    ]
+    
+    # OrderingFilter configuration
+    ordering_fields = [
+        'title',              # Order by book title
+        'publication_year',   # Order by publication year
+        'author__name',       # Order by author name
+        'id',                 # Order by primary key
+    ]
+    ordering = ['-publication_year', 'title']  # Default ordering: newest first, then title
+    
+    def get_queryset(self):
+        """
+        Override to provide custom queryset optimization or additional filtering.
+        
+        This method can be extended to add:
+        - Performance optimizations (select_related, prefetch_related)
+        - Additional business logic filtering
+        - Custom permission-based filtering
+        """
+        queryset = super().get_queryset()
+        
+        # Optimize database queries by selecting related author data
+        queryset = queryset.select_related('author')
+        
+        # Example: Add custom filtering based on request parameters
+        custom_filter = self.request.query_params.get('custom_filter')
+        if custom_filter:
+            # Add your custom filtering logic here
+            pass
+            
+        return queryset
+    
+    def list(self, request, *args, **kwargs):
+        """
+        Override list method to provide enhanced response with query information.
+        
+        Returns additional metadata about available filters, search fields,
+        and ordering options to help API consumers understand available features.
+        """
+        response = super().list(request, *args, **kwargs)
+        
+        # Add metadata about available query features
+        response.data['query_capabilities'] = {
+            'filtering': {
+                'available_filters': [
+                    'publication_year', 'publication_year_min', 'publication_year_max',
+                    'title', 'title_icontains', 
+                    'author_name', 'author_name_icontains',
+                    'publication_year_in'
+                ],
+                'description': 'Use filter parameters to narrow down results',
+            },
+            'searching': {
+                'available_fields': self.search_fields,
+                'description': 'Use search parameter for text search across multiple fields',
+            },
+            'ordering': {
+                'available_fields': self.ordering_fields,
+                'default_ordering': self.ordering,
+                'description': 'Use ordering parameter to sort results',
+            },
+            'examples': {
+                'filter_by_year': '/api/books/?publication_year_min=2000&publication_year_max=2020',
+                'search_books': '/api/books/?search=harry+potter',
+                'order_by_title': '/api/books/?ordering=title',
+                'combined_query': '/api/books/?author_name_icontains=rowling&ordering=-publication_year',
+            }
+        }
+        
+        return response
+
+
+# Enhanced AuthorListView with similar features
+class AuthorListView(generics.ListAPIView):
+    """
+    Author ListView with filtering, searching, and ordering capabilities.
+    """
+    
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    permission_classes = [AllowAny]
+    
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['name', 'books__title']  # Search in author names and their book titles
+    ordering_fields = ['name', 'id']
+    ordering = ['name']  # Default ordering: alphabetical by name
 
 
 class BookDetailView(generics.RetrieveAPIView):
     """
-    Generic DetailView for retrieving a single book by ID.
-    
-    Uses AllowAny permission to allow anyone to view book details.
+    Book DetailView - unchanged from previous implementation.
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [AllowAny]  # Explicitly use AllowAny
+    permission_classes = [AllowAny]
     lookup_field = 'pk'
 
 

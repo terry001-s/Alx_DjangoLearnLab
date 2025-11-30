@@ -52,6 +52,23 @@ class Book(models.Model):
         """
         return f'"{self.title}" by {self.author.name} ({self.publication_year})'
     
+    @property
+    def author_name(self):
+        """Property to easily access author name for searching and filtering."""
+        return self.author.name
+    
+    @property
+    def search_display(self):
+        """Property for search result display."""
+        return f"{self.title} - {self.author.name} ({self.publication_year})"
+    
     class Meta:
         ordering = ['-publication_year', 'title']  # Order by most recent first, then title
         unique_together = ['title', 'author']  # Prevent duplicate books by same author
+
+
+    indexes = [
+            models.Index(fields=['title']),
+            models.Index(fields=['publication_year']),
+            models.Index(fields=['author']),
+        ]
