@@ -55,5 +55,3 @@ class Book(models.Model):
     class Meta:
         ordering = ['-publication_year', 'title']  # Order by most recent first, then title
         unique_together = ['title', 'author']  # Prevent duplicate books by same author
-
-
