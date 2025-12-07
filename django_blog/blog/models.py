@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 # Create your models here.
 class Post(models.Model):
@@ -10,3 +11,20 @@ class Post(models.Model):
 
    def __str__(self):
         return self.title
+   
+    
+   def get_absolute_url(self):
+        return reverse('post_detail', kwargs={'pk': self.pk})
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    bio = models.TextField(max_length=500, blank=True)
+    profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f'{self.user.username} Profile'
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)

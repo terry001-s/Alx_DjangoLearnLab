@@ -1,0 +1,31 @@
+<!-- blog/templates/blog/register.html -->
+{% extends 'blog/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Register - Django Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Create Account</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Sign Up</button>
+                    </div>
+                </form>
+                <div class="border-top pt-3 mt-3 text-center">
+                    <small class="text-muted">
+                        Already have an account? <a href="{% url 'login' %}" class="text-decoration-none">Sign In</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
