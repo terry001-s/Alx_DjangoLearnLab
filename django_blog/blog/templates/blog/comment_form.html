@@ -1,0 +1,91 @@
+<!-- blog/templates/blog/comment_form.html -->
+{% extends 'blog/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if editing %}Edit Comment{% else %}Add Comment{% endif %} - Django Blog
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header {% if editing %}bg-warning text-dark{% else %}bg-primary text-white{% endif %}">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-{% if editing %}edit{% else %}comment{% endif %}"></i>
+                    {% if editing %}Edit Comment{% else %}Add a Comment{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Post Info -->
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    {% if editing %}
+                        You are editing your comment on:
+                    {% else %}
+                        You are adding a comment to:
+                    {% endif %}
+                    <strong>{{ post.title }}</strong>
+                </div>
+                
+                <!-- Comment Form -->
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'post_detail' post.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <div>
+                            {% if editing %}
+                            <a href="{% url 'comment_delete' object.pk %}" class="btn btn-outline-danger me-2">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+                            {% endif %}
+                            <button type="submit" class="btn {% if editing %}btn-warning{% else %}btn-primary{% endif %}">
+                                <i class="fas fa-{% if editing %}save{% else %}paper-plane{% endif %}"></i>
+                                {% if editing %}Update Comment{% else %}Post Comment{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Additional Info -->
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="fas fa-lightbulb"></i> Tips:
+                    <ul class="mb-0 ps-3">
+                        <li>Be respectful and constructive in your comments</li>
+                        <li>Stay on topic with the blog post</li>
+                        <li>Proofread before posting</li>
+                    </ul>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter
+    const contentField = document.getElementById('id_content');
+    if (contentField) {
+        const counter = document.createElement('small');
+        counter.className = 'form-text text-end d-block mt-1';
+        counter.innerHTML = 'Characters: <span id="commentCount">0</span>/1000';
+        contentField.parentNode.appendChild(counter);
+        
+        contentField.addEventListener('input', function() {
+            document.getElementById('commentCount').textContent = this.value.length;
+        });
+        
+        // Initial count
+        document.getElementById('commentCount').textContent = contentField.value.length;
+    }
+});
+</script>
+{% endblock %}

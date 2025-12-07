@@ -5,13 +5,19 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.views.generic.edit import FormMixin
-from django.urls import reverse_lazy
+from django.views.generic import (
+    ListView, DetailView, CreateView, UpdateView, DeleteView, 
+    FormMixin, View
+)
+from django.urls import reverse_lazy, reverse
+from django.http import HttpResponseRedirect
 from .models import Post, Profile, Comment
-from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm, CommentForm, CommentEditForm
+from .forms import (
+    UserRegisterForm, UserUpdateForm, ProfileUpdateForm, 
+    CommentForm, CommentEditForm
+)
 
-# Authentication Views
+# Authentication Views (keep as functions as they are)
 def register_view(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
@@ -112,66 +118,67 @@ class PostDetailView(FormMixin, DetailView):
     def get_success_url(self):
         return reverse_lazy('post_detail', kwargs={'pk': self.object.pk})
 
-@login_required
-def add_comment(request, pk):
-    post = get_object_or_404(Post, pk=pk)
+# Comment CRUD Views
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment_form.html'
     
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.post = post
-            comment.author = request.user
-            comment.save()
-            messages.success(request, 'Your comment has been posted!')
-        else:
-            messages.error(request, 'There was an error with your comment.')
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        form.instance.post = get_object_or_404(Post, pk=self.kwargs['post_pk'])
+        response = super().form_valid(form)
+        messages.success(self.request, 'Your comment has been posted successfully!')
+        return response
     
-    return redirect('post_detail', pk=pk)
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'pk': self.object.post.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post'] = get_object_or_404(Post, pk=self.kwargs['post_pk'])
+        return context
 
-@login_required
-def edit_comment(request, pk):
-    comment = get_object_or_404(Comment, pk=pk)
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    form_class = CommentEditForm
+    template_name = 'blog/comment_form.html'
+    pk_url_kwarg = 'pk'
     
-    # Check if user can edit this comment
-    if not comment.can_edit(request.user):
-        messages.error(request, 'You do not have permission to edit this comment.')
-        return redirect('post_detail', pk=comment.post.pk)
+    def form_valid(self, form):
+        messages.success(self.request, 'Comment updated successfully!')
+        return super().form_valid(form)
     
-    if request.method == 'POST':
-        form = CommentEditForm(request.POST, instance=comment)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Comment updated successfully!')
-            return redirect('post_detail', pk=comment.post.pk)
-    else:
-        form = CommentEditForm(instance=comment)
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'pk': self.object.post.pk})
     
-    return render(request, 'blog/comment_edit.html', {
-        'form': form,
-        'comment': comment,
-        'post': comment.post
-    })
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author or self.request.user.is_staff
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post'] = self.object.post
+        context['editing'] = True
+        return context
 
-@login_required
-def delete_comment(request, pk):
-    comment = get_object_or_404(Comment, pk=pk)
-    post_pk = comment.post.pk
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Comment
+    template_name = 'blog/comment_confirm_delete.html'
+    pk_url_kwarg = 'pk'
     
-    # Check if user can delete this comment
-    if not comment.can_delete(request.user):
-        messages.error(request, 'You do not have permission to delete this comment.')
-        return redirect('post_detail', pk=post_pk)
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author or self.request.user.is_staff
     
-    if request.method == 'POST':
-        comment.delete()
-        messages.success(request, 'Comment deleted successfully!')
-        return redirect('post_detail', pk=post_pk)
+    def get_success_url(self):
+        messages.success(self.request, 'Comment deleted successfully!')
+        return reverse_lazy('post_detail', kwargs={'pk': self.object.post.pk})
     
-    return render(request, 'blog/comment_delete.html', {
-        'comment': comment,
-        'post': comment.post
-    })
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post'] = self.object.post
+        return context
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
