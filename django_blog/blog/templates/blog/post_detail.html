@@ -158,7 +158,12 @@
     </a>
 </div>
 {% endif %}
-
+<div class="mt-3">
+    <!-- Using URL: /posts/1/comments/new/ -->
+    <a href="{% url 'comment_create' post.pk %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Comment
+    </a>
+</div>
     
     <!-- Back to Posts Button -->
     <div class="d-flex justify-content-between">

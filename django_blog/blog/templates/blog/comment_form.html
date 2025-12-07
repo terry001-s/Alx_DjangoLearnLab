@@ -66,6 +66,17 @@
         </div>
     </div>
 </div>
+<!-- Cancel button goes back to post detail -->
+<a href="{% url 'post_detail' post.pk %}" class="btn btn-outline-secondary">
+    <i class="fas fa-times"></i> Cancel
+</a>
+
+<!-- Delete button (for edit mode) -->
+{% if editing %}
+<a href="{% url 'comment_delete' post.pk object.pk %}" class="btn btn-outline-danger me-2">
+    <i class="fas fa-trash"></i> Delete
+</a>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -87,5 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('commentCount').textContent = contentField.value.length;
     }
 });
+
 </script>
 {% endblock %}

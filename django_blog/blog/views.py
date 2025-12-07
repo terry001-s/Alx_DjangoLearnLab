@@ -5,19 +5,15 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import (
-    ListView, DetailView, CreateView, UpdateView, DeleteView, 
-    FormMixin, View
-)
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.urls import reverse_lazy, reverse
-from django.http import HttpResponseRedirect
 from .models import Post, Profile, Comment
 from .forms import (
     UserRegisterForm, UserUpdateForm, ProfileUpdateForm, 
     CommentForm, CommentEditForm
 )
 
-# Authentication Views (keep as functions as they are)
+# Authentication Views
 def register_view(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
@@ -84,39 +80,43 @@ class PostListView(ListView):
     ordering = ['-published_date']
     paginate_by = 5
 
-class PostDetailView(FormMixin, DetailView):
-    model = Post
-    form_class = CommentForm
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = self.get_form()
-        context['comments'] = self.object.comments.filter(approved=True).order_by('created_at')
-        return context
+class PostDetailView(View):
+    def get(self, request, *args, **kwargs):
+        post = get_object_or_404(Post, pk=kwargs['pk'])
+        form = CommentForm()
+        comments = post.comments.filter(approved=True).order_by('created_at')
+        
+        context = {
+            'post': post,
+            'form': form,
+            'comments': comments,
+        }
+        return render(request, 'blog/post_detail.html', context)
     
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             messages.error(request, 'You need to be logged in to comment.')
             return redirect('login')
         
-        self.object = self.get_object()
-        form = self.get_form()
+        post = get_object_or_404(Post, pk=kwargs['pk'])
+        form = CommentForm(request.POST)
         
         if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
-    
-    def form_valid(self, form):
-        comment = form.save(commit=False)
-        comment.post = self.object
-        comment.author = self.request.user
-        comment.save()
-        messages.success(self.request, 'Your comment has been posted!')
-        return super().form_valid(form)
-    
-    def get_success_url(self):
-        return reverse_lazy('post_detail', kwargs={'pk': self.object.pk})
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+            comment.save()
+            messages.success(request, 'Your comment has been posted!')
+            return redirect('post_detail', pk=post.pk)
+        
+        # If form is invalid, re-render with errors
+        comments = post.comments.filter(approved=True).order_by('created_at')
+        context = {
+            'post': post,
+            'form': form,
+            'comments': comments,
+        }
+        return render(request, 'blog/post_detail.html', context)
 
 # Comment CRUD Views
 class CommentCreateView(LoginRequiredMixin, CreateView):

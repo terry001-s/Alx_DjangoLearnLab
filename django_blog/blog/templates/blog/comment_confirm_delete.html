@@ -66,6 +66,11 @@
         </div>
     </div>
 </div>
+
+<!-- Cancel button -->
+<a href="{% url 'post_detail' post.pk %}" class="btn btn-outline-secondary">
+    <i class="fas fa-times"></i> No, Keep My Comment
+</a>
 {% endblock %}
 
 {% block extra_js %}
