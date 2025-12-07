@@ -43,3 +43,68 @@ footer {
     background-color: #333;
     color: white;
 }
+
+/* Add to your existing style.css */
+
+/* Tag Cloud */
+.tag-cloud {
+    line-height: 2.5;
+    text-align: center;
+}
+
+.tag-cloud-item {
+    display: inline-block;
+    margin: 5px;
+    padding: 5px 15px;
+    background-color: #f8f9fa;
+    border-radius: 25px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.tag-cloud-item:hover {
+    background-color: #007bff;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Tag badges in posts */
+.tag-badge {
+    transition: all 0.2s;
+}
+
+.tag-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Search form */
+.search-form .input-group {
+    max-width: 400px;
+}
+
+/* Popular tags sidebar */
+.popular-tags .badge {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.popular-tags .badge:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .tag-cloud-item {
+        padding: 3px 10px;
+        font-size: 0.9rem;
+    }
+    
+    .search-form .input-group {
+        max-width: 100%;
+    }
+}

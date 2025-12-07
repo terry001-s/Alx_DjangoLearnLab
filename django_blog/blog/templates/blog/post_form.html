@@ -3,18 +3,20 @@
 {% load crispy_forms_tags %}
 
 {% block title %}
-    {% if form.instance.pk %}Edit Post{% else %}New Post{% endif %} - Django Blog
+    {% if editing %}Edit Post{% else %}New Post{% endif %} - Django Blog
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .form-control, .form-select {
-        border-radius: 8px;
+    .tag-preview {
+        background-color: #f8f9fa;
+        border-radius: 5px;
         padding: 10px;
+        margin-top: 10px;
     }
-    .form-control:focus {
-        border-color: #4a90e2;
-        box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+    .tag-badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
     }
 </style>
 {% endblock %}
@@ -23,53 +25,78 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header {% if editing %}bg-warning text-dark{% else %}bg-primary text-white{% endif %}">
                 <h3 class="card-title mb-0">
-                    <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %}"></i>
-                    {% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}
+                    <i class="fas fa-{% if editing %}edit{% else %}plus{% endif %}"></i>
+                    {% if editing %}Edit Post{% else %}Create New Post{% endif %}
                 </h3>
             </div>
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     <!-- Title Field -->
                     <div class="mb-4">
-                        <label for="id_title" class="form-label fw-bold">Post Title *</label>
+                        <label class="form-label fw-bold">Title *</label>
                         {{ form.title|as_crispy_field }}
-                        <div class="form-text">Choose a descriptive title for your post.</div>
                     </div>
                     
                     <!-- Content Field -->
                     <div class="mb-4">
-                        <label for="id_content" class="form-label fw-bold">Content *</label>
+                        <label class="form-label fw-bold">Content *</label>
                         {{ form.content|as_crispy_field }}
-                        <div class="form-text">Write your blog post content here. You can use markdown for formatting.</div>
                     </div>
                     
-                    <!-- Preview Button -->
+                    <!-- Tags Field -->
                     <div class="mb-4">
-                        <button type="button" class="btn btn-outline-secondary" id="previewBtn">
-                            <i class="fas fa-eye"></i> Preview
-                        </button>
-                        <small class="text-muted ms-2">(Preview feature coming soon)</small>
+                        <label class="form-label fw-bold">Tags</label>
+                        {{ form.tags|as_crispy_field }}
+                        <div class="form-text">
+                            Separate tags with commas. Example: django, python, web-development
+                        </div>
+                        
+                        <!-- Tag Preview -->
+                        <div class="tag-preview mt-2">
+                            <strong>Tag Preview:</strong>
+                            <div id="tagPreview" class="mt-2">
+                                {% if editing %}
+                                    {% for tag in form.instance.tags.all %}
+                                    <span class="badge bg-primary tag-badge">
+                                        {{ tag.name }}
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Popular Tags -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Popular Tags:</label>
+                        <div class="popular-tags">
+                            {% for tag in popular_tags|slice:":10" %}
+                            <a href="javascript:void(0)" class="badge bg-secondary tag-badge add-tag" data-tag="{{ tag.name }}">
+                                {{ tag.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
                     </div>
                     
                     <!-- Form Actions -->
                     <div class="d-flex justify-content-between mt-4">
                         <div>
-                            <a href="{% if form.instance.pk %}{% url 'post_detail' form.instance.pk %}{% else %}{% url 'post_list' %}{% endif %}" 
+                            <a href="{% if editing %}{% url 'post_detail' object.pk %}{% else %}{% url 'post_list' %}{% endif %}" 
                                class="btn btn-outline-secondary">
                                 <i class="fas fa-times"></i> Cancel
                             </a>
                         </div>
                         <div>
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-{% if form.instance.pk %}save{% else %}paper-plane{% endif %}"></i>
-                                {% if form.instance.pk %}Update Post{% else %}Publish Post{% endif %}
+                                <i class="fas fa-{% if editing %}save{% else %}paper-plane{% endif %}"></i>
+                                {% if editing %}Update Post{% else %}Publish Post{% endif %}
                             </button>
-                            {% if form.instance.pk %}
-                            <a href="{% url 'post_delete' form.instance.pk %}" class="btn btn-outline-danger ms-2">
+                            {% if editing %}
+                            <a href="{% url 'post_delete' object.pk %}" class="btn btn-outline-danger ms-2">
                                 <i class="fas fa-trash"></i> Delete
                             </a>
                             {% endif %}
@@ -78,14 +105,13 @@
                 </form>
             </div>
             
-            <!-- Help Section -->
+            <!-- Writing Tips -->
             <div class="card-footer bg-light">
-                <h6 class="mb-2"><i class="fas fa-lightbulb"></i> Writing Tips:</h6>
+                <h6 class="mb-2"><i class="fas fa-lightbulb"></i> Tips:</h6>
                 <ul class="list-unstyled mb-0">
-                    <li><small><i class="fas fa-check text-success"></i> Keep your title clear and concise</small></li>
-                    <li><small><i class="fas fa-check text-success"></i> Use paragraphs to organize your thoughts</small></li>
-                    <li><small><i class="fas fa-check text-success"></i> Add images to make your post more engaging</small></li>
-                    <li><small><i class="fas fa-check text-success"></i> Proofread before publishing</small></li>
+                    <li><small><i class="fas fa-check text-success"></i> Add relevant tags to help others find your post</small></li>
+                    <li><small><i class="fas fa-check text-success"></i> Use 3-5 specific tags for best results</small></li>
+                    <li><small><i class="fas fa-check text-success"></i> Tags should be lowercase and hyphenated for multiple words</small></li>
                 </ul>
             </div>
         </div>
@@ -96,26 +122,46 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Character counter for title
-    const titleInput = document.getElementById('id_title');
-    const titleCounter = document.createElement('small');
-    titleCounter.className = 'form-text text-end d-block';
-    titleCounter.innerHTML = 'Characters: <span id="titleCount">0</span>/200';
-    titleInput.parentNode.appendChild(titleCounter);
+    const tagsInput = document.getElementById('id_tags');
+    const tagPreview = document.getElementById('tagPreview');
     
-    titleInput.addEventListener('input', function() {
-        document.getElementById('titleCount').textContent = this.value.length;
+    // Update tag preview when typing
+    tagsInput.addEventListener('input', function() {
+        const tags = this.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+        updateTagPreview(tags);
     });
     
-    // Trigger initial count
-    if (titleInput.value) {
-        document.getElementById('titleCount').textContent = titleInput.value.length;
+    // Add tag from popular tags
+    document.querySelectorAll('.add-tag').forEach(button => {
+        button.addEventListener('click', function() {
+            const tag = this.getAttribute('data-tag');
+            const currentTags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t);
+            
+            if (!currentTags.includes(tag)) {
+                currentTags.push(tag);
+                tagsInput.value = currentTags.join(', ');
+                updateTagPreview(currentTags);
+            }
+        });
+    });
+    
+    function updateTagPreview(tags) {
+        tagPreview.innerHTML = '';
+        tags.forEach(tag => {
+            if (tag) {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary tag-badge';
+                badge.textContent = tag;
+                tagPreview.appendChild(badge);
+            }
+        });
     }
     
-    // Preview button (placeholder)
-    document.getElementById('previewBtn').addEventListener('click', function() {
-        alert('Preview feature will be implemented in the next update!');
-    });
+    // Initial preview for edit mode
+    if (tagsInput.value) {
+        const initialTags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+        updateTagPreview(initialTags);
+    }
 });
 </script>
 {% endblock %}
