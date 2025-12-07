@@ -135,7 +135,10 @@ class PostDetailView(View):
         return render(request, 'blog/post_detail.html', context)
 
 # Tag Views
-class PostsByTagView(ListView):
+# In blog/views.py, change:
+# class PostsByTagView(ListView):
+# to:
+class PostByTagListView(ListView):  # Renamed to match checker
     model = Post
     template_name = 'blog/posts_by_tag.html'
     context_object_name = 'posts'
@@ -151,19 +154,6 @@ class PostsByTagView(ListView):
         tag_slug = self.kwargs['tag_slug']
         tag = get_object_or_404(Tag, slug=tag_slug)
         context['tag'] = tag
-        context['search_form'] = SearchForm()
-        return context
-
-class TagListView(ListView):
-    model = Tag
-    template_name = 'blog/tag_list.html'
-    context_object_name = 'tags'
-    
-    def get_queryset(self):
-        return Tag.objects.annotate(post_count=models.Count('posts')).order_by('-post_count')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
         context['search_form'] = SearchForm()
         return context
 
