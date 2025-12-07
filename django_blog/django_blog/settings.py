@@ -40,7 +40,11 @@ INSTALLED_APPS = [
     'blog',
     'crispy_forms',
     'crispy_bootstrap5',
+    'taggit',
 ]
+
+# Add Taggit settings
+TAGGIT_CASE_INSENSITIVE = True
 
 # Add at the end of settings.py
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
