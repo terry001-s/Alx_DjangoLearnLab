@@ -136,7 +136,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post'] = get_object_or_404(Post, pk=self.kwargs['post_pk'])
+        context['post'] = get_object_or_404(Post, pk=self.kwargs['pk'])
         return context
 
 class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
