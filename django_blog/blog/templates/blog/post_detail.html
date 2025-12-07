@@ -1,111 +1,197 @@
 <!-- blog/templates/blog/post_detail.html -->
 {% extends 'blog/base.html' %}
+{% load crispy_forms_tags %}
 
 {% block title %}{{ post.title }} - Django Blog{% endblock %}
 
 {% block content %}
 <article>
-    <div class="card shadow-sm">
+    <!-- Post Header (same as before) -->
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <!-- Post Header -->
-            <div class="mb-4">
-                <h1 class="card-title display-5">{{ post.title }}</h1>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <img src="{{ post.author.profile.profile_picture.url }}" 
-                                 alt="{{ post.author.username }}" 
-                                 class="rounded-circle" 
-                                 style="width: 40px; height: 40px; object-fit: cover;">
-                        </div>
-                        <div>
-                            <h6 class="mb-0">{{ post.author.username }}</h6>
-                            <small class="text-muted">
-                                <i class="fas fa-calendar"></i> {{ post.published_date|date:"F d, Y" }}
-                                <span class="mx-2">•</span>
-                                <i class="fas fa-clock"></i> {{ post.published_date|date:"g:i A" }}
-                            </small>
-                        </div>
+            <h1 class="card-title display-5">{{ post.title }}</h1>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <img src="{{ post.author.profile.profile_picture.url }}" 
+                             alt="{{ post.author.username }}" 
+                             class="rounded-circle" 
+                             style="width: 40px; height: 40px; object-fit: cover;">
                     </div>
-                    
-                    {% if user == post.author %}
-                    <div class="btn-group">
-                        <a href="{% url 'post_update' post.pk %}" class="btn btn-outline-primary">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <a href="{% url 'post_delete' post.pk %}" class="btn btn-outline-danger">
-                            <i class="fas fa-trash"></i> Delete
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Post Content -->
-            <div class="post-content mb-5">
-                {{ post.content|linebreaks }}
-            </div>
-            
-            <!-- Post Footer -->
-            <div class="border-top pt-3">
-                <div class="d-flex justify-content-between">
                     <div>
-                        <a href="{% url 'post_list' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left"></i> Back to Posts
-                        </a>
-                    </div>
-                    <div class="text-muted">
-                        <small>
-                            <i class="fas fa-eye"></i> Views: 0
+                        <h6 class="mb-0">{{ post.author.username }}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> {{ post.published_date|date:"F d, Y" }}
                             <span class="mx-2">•</span>
-                            <i class="fas fa-comment"></i> Comments: 0
+                            <i class="fas fa-clock"></i> {{ post.published_date|date:"g:i A" }}
                         </small>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Author Info Card -->
-    <div class="card mt-4 shadow-sm">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-2 text-center">
-                    <img src="{{ post.author.profile.profile_picture.url }}" 
-                         alt="{{ post.author.username }}" 
-                         class="rounded-circle mb-3"
-                         style="width: 100px; height: 100px; object-fit: cover;">
-                </div>
-                <div class="col-md-10">
-                    <h4>About the Author</h4>
-                    <h5>{{ post.author.username }}</h5>
-                    <p class="text-muted">
-                        {% if post.author.profile.bio %}
-                            {{ post.author.profile.bio }}
-                        {% else %}
-                            This author hasn't written a bio yet.
-                        {% endif %}
-                    </p>
-                    <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">
-                        View Profile
+                
+                {% if user == post.author %}
+                <div class="btn-group">
+                    <a href="{% url 'post_update' post.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{% url 'post_delete' post.pk %}" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Delete
                     </a>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
     
-    <!-- Comments Section (Placeholder for future implementation) -->
-    <div class="card mt-4 shadow-sm">
-        <div class="card-header">
-            <h5 class="mb-0">
-                <i class="fas fa-comments"></i> Comments (0)
-            </h5>
-        </div>
+    <!-- Post Content -->
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <div class="alert alert-info">
-                Comments feature will be implemented in a future update.
+            <div class="post-content">
+                {{ post.content|linebreaks }}
             </div>
         </div>
     </div>
+    
+    <!-- Comments Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h3 class="mb-0">
+                <i class="fas fa-comments"></i> Comments ({{ post.comment_count }})
+            </h3>
+        </div>
+        
+        <div class="card-body">
+            {% if comments %}
+                <div class="comments-list">
+                    {% for comment in comments %}
+                    <div class="comment mb-4 pb-4 border-bottom" id="comment-{{ comment.pk }}">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <img src="{{ comment.author.profile.profile_picture.url }}" 
+                                     alt="{{ comment.author.username }}" 
+                                     class="rounded-circle"
+                                     style="width: 40px; height: 40px; object-fit: cover;">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-0">{{ comment.author.username }}</h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock"></i> {{ comment.created_at|date:"F d, Y g:i A" }}
+                                            {% if comment.updated_at != comment.created_at %}
+                                            <span class="mx-1">•</span>
+                                            <i class="fas fa-history"></i> edited {{ comment.updated_at|date:"M d" }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    
+                                    {% if comment.can_edit user %}
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'comment_edit' comment.pk %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'comment_delete' comment.pk %}" 
+                                           class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="comment-content mt-2">
+                                    {{ comment.content|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                    <h5>No comments yet</h5>
+                    <p class="text-muted">Be the first to share your thoughts!</p>
+                </div>
+            {% endif %}
+            
+            <!-- Add Comment Form -->
+            <div class="add-comment mt-4 pt-4 border-top">
+                <h4 class="mb-3">
+                    <i class="fas fa-pen"></i> Add a Comment
+                </h4>
+                
+                {% if user.is_authenticated %}
+                <form method="POST" action="{% url 'post_detail' post.pk %}">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Post Comment
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    You need to <a href="{% url 'login' %}?next={{ request.path }}" class="alert-link">login</a> 
+                    to post a comment.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Back to Posts Button -->
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'post_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to All Posts
+        </a>
+        
+        {% if comments %}
+        <a href="#comment-form" class="btn btn-outline-primary">
+            <i class="fas fa-comment"></i> Add Comment
+        </a>
+        {% endif %}
+    </div>
 </article>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Smooth scroll to comment form
+    const commentLinks = document.querySelectorAll('a[href="#comment-form"]');
+    commentLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = document.querySelector('.add-comment');
+            if (form) {
+                form.scrollIntoView({ behavior: 'smooth' });
+                const textarea = form.querySelector('textarea');
+                if (textarea) {
+                    textarea.focus();
+                }
+            }
+        });
+    });
+    
+    // Character counter for comment form
+    const commentTextarea = document.querySelector('textarea[name="content"]');
+    if (commentTextarea) {
+        const counter = document.createElement('small');
+        counter.className = 'form-text text-end d-block mt-1';
+        counter.innerHTML = 'Characters: <span id="commentCount">0</span>/1000';
+        commentTextarea.parentNode.appendChild(counter);
+        
+        commentTextarea.addEventListener('input', function() {
+            document.getElementById('commentCount').textContent = this.value.length;
+        });
+        
+        // Trigger initial count
+        if (commentTextarea.value) {
+            document.getElementById('commentCount').textContent = commentTextarea.value.length;
+        }
+    }
+});
+</script>
 {% endblock %}
