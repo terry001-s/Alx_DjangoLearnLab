@@ -1,0 +1,121 @@
+<!-- blog/templates/blog/post_form.html -->
+{% extends 'blog/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Post{% else %}New Post{% endif %} - Django Blog
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 10px;
+    }
+    .form-control:focus {
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %}"></i>
+                    {% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <!-- Title Field -->
+                    <div class="mb-4">
+                        <label for="id_title" class="form-label fw-bold">Post Title *</label>
+                        {{ form.title|as_crispy_field }}
+                        <div class="form-text">Choose a descriptive title for your post.</div>
+                    </div>
+                    
+                    <!-- Content Field -->
+                    <div class="mb-4">
+                        <label for="id_content" class="form-label fw-bold">Content *</label>
+                        {{ form.content|as_crispy_field }}
+                        <div class="form-text">Write your blog post content here. You can use markdown for formatting.</div>
+                    </div>
+                    
+                    <!-- Preview Button -->
+                    <div class="mb-4">
+                        <button type="button" class="btn btn-outline-secondary" id="previewBtn">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        <small class="text-muted ms-2">(Preview feature coming soon)</small>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <div>
+                            <a href="{% if form.instance.pk %}{% url 'post_detail' form.instance.pk %}{% else %}{% url 'post_list' %}{% endif %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-{% if form.instance.pk %}save{% else %}paper-plane{% endif %}"></i>
+                                {% if form.instance.pk %}Update Post{% else %}Publish Post{% endif %}
+                            </button>
+                            {% if form.instance.pk %}
+                            <a href="{% url 'post_delete' form.instance.pk %}" class="btn btn-outline-danger ms-2">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Help Section -->
+            <div class="card-footer bg-light">
+                <h6 class="mb-2"><i class="fas fa-lightbulb"></i> Writing Tips:</h6>
+                <ul class="list-unstyled mb-0">
+                    <li><small><i class="fas fa-check text-success"></i> Keep your title clear and concise</small></li>
+                    <li><small><i class="fas fa-check text-success"></i> Use paragraphs to organize your thoughts</small></li>
+                    <li><small><i class="fas fa-check text-success"></i> Add images to make your post more engaging</small></li>
+                    <li><small><i class="fas fa-check text-success"></i> Proofread before publishing</small></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for title
+    const titleInput = document.getElementById('id_title');
+    const titleCounter = document.createElement('small');
+    titleCounter.className = 'form-text text-end d-block';
+    titleCounter.innerHTML = 'Characters: <span id="titleCount">0</span>/200';
+    titleInput.parentNode.appendChild(titleCounter);
+    
+    titleInput.addEventListener('input', function() {
+        document.getElementById('titleCount').textContent = this.value.length;
+    });
+    
+    // Trigger initial count
+    if (titleInput.value) {
+        document.getElementById('titleCount').textContent = titleInput.value.length;
+    }
+    
+    // Preview button (placeholder)
+    document.getElementById('previewBtn').addEventListener('click', function() {
+        alert('Preview feature will be implemented in the next update!');
+    });
+});
+</script>
+{% endblock %}

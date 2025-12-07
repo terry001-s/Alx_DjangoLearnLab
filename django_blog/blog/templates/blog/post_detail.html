@@ -1,0 +1,111 @@
+<!-- blog/templates/blog/post_detail.html -->
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }} - Django Blog{% endblock %}
+
+{% block content %}
+<article>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- Post Header -->
+            <div class="mb-4">
+                <h1 class="card-title display-5">{{ post.title }}</h1>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <img src="{{ post.author.profile.profile_picture.url }}" 
+                                 alt="{{ post.author.username }}" 
+                                 class="rounded-circle" 
+                                 style="width: 40px; height: 40px; object-fit: cover;">
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ post.author.username }}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> {{ post.published_date|date:"F d, Y" }}
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-clock"></i> {{ post.published_date|date:"g:i A" }}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    {% if user == post.author %}
+                    <div class="btn-group">
+                        <a href="{% url 'post_update' post.pk %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'post_delete' post.pk %}" class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Post Content -->
+            <div class="post-content mb-5">
+                {{ post.content|linebreaks }}
+            </div>
+            
+            <!-- Post Footer -->
+            <div class="border-top pt-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a href="{% url 'post_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Posts
+                        </a>
+                    </div>
+                    <div class="text-muted">
+                        <small>
+                            <i class="fas fa-eye"></i> Views: 0
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-comment"></i> Comments: 0
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Author Info Card -->
+    <div class="card mt-4 shadow-sm">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-2 text-center">
+                    <img src="{{ post.author.profile.profile_picture.url }}" 
+                         alt="{{ post.author.username }}" 
+                         class="rounded-circle mb-3"
+                         style="width: 100px; height: 100px; object-fit: cover;">
+                </div>
+                <div class="col-md-10">
+                    <h4>About the Author</h4>
+                    <h5>{{ post.author.username }}</h5>
+                    <p class="text-muted">
+                        {% if post.author.profile.bio %}
+                            {{ post.author.profile.bio }}
+                        {% else %}
+                            This author hasn't written a bio yet.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">
+                        View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Comments Section (Placeholder for future implementation) -->
+    <div class="card mt-4 shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-comments"></i> Comments (0)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                Comments feature will be implemented in a future update.
+            </div>
+        </div>
+    </div>
+</article>
+{% endblock %}
