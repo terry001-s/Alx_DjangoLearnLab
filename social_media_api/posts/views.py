@@ -78,6 +78,24 @@ class PostViewSet(viewsets.ModelViewSet):
         
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def feed(self, request):
+        """Get posts from users that the current user follows"""
+        # Get users that the current user is following
+        following_users = request.user.following.all()
+        
+        # Get posts from followed users
+        posts = self.get_queryset().filter(author__in=following_users)
+        
+        # Apply pagination
+        page = self.paginate_queryset(posts)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(posts, many=True)
+        return Response(serializer.data)
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
@@ -125,3 +143,50 @@ class CommentViewSet(viewsets.ModelViewSet):
             )
         
         return super().create(request, *args, **kwargs)
+    
+
+
+class FeedPagination(PageNumberPagination):
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+class FeedView(APIView):
+    """
+    View to get posts from users that the current user follows
+    """
+    permission_classes = [IsAuthenticated]
+    pagination_class = FeedPagination
+    
+    def get(self, request):
+        # Get users that the current user is following
+        following_users = request.user.following.all()
+        
+        # Get posts from followed users
+        posts = Post.objects.filter(
+            author__in=following_users
+        ).select_related('author').prefetch_related('comments')
+        
+        # Apply pagination
+        paginator = FeedPagination()
+        page = paginator.paginate_queryset(posts, request)
+        
+        if page is not None:
+            serializer = PostSerializer(
+                page, 
+                many=True,
+                context={'request': request}
+            )
+            return paginator.get_paginated_response(serializer.data)
+        
+        serializer = PostSerializer(
+            posts, 
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def feed(self, request):
+        """Alternative feed endpoint as an action"""
+        return self.get(request)    

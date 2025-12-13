@@ -101,9 +101,59 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'created_at', 'updated_at')
         read_only_fields = ('id', 'created_at', 'updated_at')
     
-    def update(self, instance, validated_data):
-        # Handle profile update
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
+    def to_representation(self, instance):
+        """Add follow relationship info if requested by current user"""
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request and hasattr(request, 'user'):
+            current_user = request.user
+            data['is_following'] = current_user.is_following(instance)
+            data['can_follow'] = current_user != instance
+        
+        return data
+
+class UserFollowSerializer(serializers.ModelSerializer):
+    """Serializer for user follow operations"""
+    is_following = serializers.SerializerMethodField()
+    can_follow = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 
+                  'profile_picture', 'followers_count', 'following_count',
+                  'is_following', 'can_follow']
+        read_only_fields = ['id', 'username', 'first_name', 'last_name', 
+                           'profile_picture', 'followers_count', 'following_count']
+    
+    def get_is_following(self, obj):
+        """Check if current user is following this user"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return request.user.is_following(obj)
+        return False
+    
+    def get_can_follow(self, obj):
+        """Check if current user can follow this user (not themselves)"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return request.user != obj
+        return False
+
+class FollowActionSerializer(serializers.Serializer):
+    """Serializer for follow/unfollow actions"""
+    user_id = serializers.IntegerField(required=True)
+    
+    def validate_user_id(self, value):
+        try:
+            user = User.objects.get(id=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User not found.")
+        
+        # Check if trying to follow self
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            if request.user.id == value:
+                raise serializers.ValidationError("Cannot follow yourself.")
+        
+        return value    
