@@ -1,6 +1,5 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import logout, authenticate
@@ -191,7 +190,6 @@ class UserFollowStatusView(generics.GenericAPIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-# Let me also add a view that specifically demonstrates CustomUser.objects.all()
 class UserListView(generics.GenericAPIView):
     """View to list all users (for demonstration purposes)"""
     permission_classes = [IsAuthenticated]
