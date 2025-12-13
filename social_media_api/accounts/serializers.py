@@ -3,11 +3,21 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 
+# Get the custom user model
 User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
-    password2 = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    # Using serializers.CharField() for both password fields
+    password = serializers.CharField(
+        write_only=True, 
+        required=True, 
+        style={'input_type': 'password'}
+    )
+    password2 = serializers.CharField(
+        write_only=True, 
+        required=True, 
+        style={'input_type': 'password'}
+    )
     
     class Meta:
         model = User
@@ -19,12 +29,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         }
     
     def validate(self, data):
+        # Validate that passwords match
         if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
         
         # Check if email already exists
         if User.objects.filter(email=data['email']).exists():
             raise serializers.ValidationError({"email": "This email is already registered."})
+        
+        # Check if username already exists
+        if User.objects.filter(username=data['username']).exists():
+            raise serializers.ValidationError({"username": "This username is already taken."})
         
         return data
     
@@ -33,10 +48,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         validated_data.pop('password2')
         
-        # Create user using create_user method
-        user = User.objects.create_user(
+        # Use get_user_model().objects.create_user() to create the user
+        user = get_user_model().objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
             password=password,
-            **validated_data
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            bio=validated_data.get('bio', '')
         )
         
         # Create token for the user
@@ -45,8 +64,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 class UserLoginSerializer(serializers.Serializer):
+    # Using serializers.CharField() for both fields
     username = serializers.CharField(required=True)
-    password = serializers.CharField(required=True, style={'input_type': 'password'})
+    password = serializers.CharField(
+        required=True, 
+        write_only=True,
+        style={'input_type': 'password'}
+    )
     
     def validate(self, data):
         username = data.get('username')
@@ -76,3 +100,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'profile_picture', 'followers_count', 'following_count', 
                   'created_at', 'updated_at')
         read_only_fields = ('id', 'created_at', 'updated_at')
+    
+    def update(self, instance, validated_data):
+        # Handle profile update
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance

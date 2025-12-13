@@ -3,9 +3,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
-from django.contrib.auth import logout, get_user_model
+from django.contrib.auth import logout
+from django.contrib.auth import get_user_model
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer
 
+# Get the user model
 User = get_user_model()
 
 class UserRegistrationView(APIView):
@@ -15,7 +17,7 @@ class UserRegistrationView(APIView):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            # Get the token created in the serializer
+            # Get the token that was created in the serializer
             token = Token.objects.get(user=user)
             return Response({
                 'user': UserProfileSerializer(user).data,
