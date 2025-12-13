@@ -1,6 +1,6 @@
 from rest_framework import status, generics
+from rest_framework import permissions
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import logout, authenticate
 from django.contrib.auth import get_user_model
@@ -15,7 +15,7 @@ User = get_user_model()
 
 class UserRegistrationView(generics.GenericAPIView):
     """View for user registration"""
-    permission_classes = [AllowAny]
+    permission_classes = [permissions.AllowAny]
     serializer_class = UserRegistrationSerializer
     
     def post(self, request):
@@ -33,7 +33,7 @@ class UserRegistrationView(generics.GenericAPIView):
 
 class UserLoginView(generics.GenericAPIView):
     """View for user login"""
-    permission_classes = [AllowAny]
+    permission_classes = [permissions.AllowAny]
     serializer_class = UserLoginSerializer
     
     def post(self, request):
@@ -51,7 +51,7 @@ class UserLoginView(generics.GenericAPIView):
 
 class UserLogoutView(generics.GenericAPIView):
     """View for user logout"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
         # Delete the token associated with the current user
@@ -63,7 +63,7 @@ class UserLogoutView(generics.GenericAPIView):
 
 class UserProfileView(generics.GenericAPIView):
     """View for user profile management"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserProfileSerializer
     
     def get(self, request):
@@ -84,7 +84,7 @@ class UserProfileView(generics.GenericAPIView):
 
 class UserDetailView(generics.GenericAPIView):
     """View to get details of a specific user"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, username):
         try:
@@ -96,7 +96,7 @@ class UserDetailView(generics.GenericAPIView):
 
 class FollowUserView(generics.GenericAPIView):
     """View to follow another user"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = FollowActionSerializer
     
     def post(self, request):
@@ -119,7 +119,7 @@ class FollowUserView(generics.GenericAPIView):
 
 class UnfollowUserView(generics.GenericAPIView):
     """View to unfollow another user"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = FollowActionSerializer
     
     def post(self, request):
@@ -142,7 +142,7 @@ class UnfollowUserView(generics.GenericAPIView):
 
 class FollowingListView(generics.GenericAPIView):
     """View to list users that the current user is following"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
         following_users = request.user.following.all()
@@ -155,7 +155,7 @@ class FollowingListView(generics.GenericAPIView):
 
 class FollowersListView(generics.GenericAPIView):
     """View to list users who are following the current user"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
         followers = request.user.followers.all()
@@ -168,7 +168,7 @@ class FollowersListView(generics.GenericAPIView):
 
 class UserFollowStatusView(generics.GenericAPIView):
     """View to check follow status between users"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, user_id):
         try:
@@ -192,7 +192,7 @@ class UserFollowStatusView(generics.GenericAPIView):
 
 class UserListView(generics.GenericAPIView):
     """View to list all users (for demonstration purposes)"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
         # Using CustomUser.objects.all() to get all users
