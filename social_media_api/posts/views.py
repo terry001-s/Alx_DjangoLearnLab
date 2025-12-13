@@ -1,7 +1,7 @@
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
+from rest_framework import permissions
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
@@ -21,6 +21,11 @@ class CommentPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+class FeedPagination(PageNumberPagination):
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
 # Custom filter for posts
 class PostFilter(django_filters.FilterSet):
     title = django_filters.CharFilter(lookup_expr='icontains')
@@ -36,7 +41,7 @@ class PostViewSet(viewsets.ModelViewSet):
     ViewSet for viewing and editing posts.
     """
     queryset = Post.objects.all()
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     pagination_class = PostPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = PostFilter
@@ -85,8 +90,8 @@ class PostViewSet(viewsets.ModelViewSet):
         # Get users that the current user is following
         following_users = request.user.following.all()
         
-        # Get posts from followed users
-        posts = self.get_queryset().filter(author__in=following_users)
+        # Get posts from followed users, ordered by creation date (most recent first)
+        posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
         
         # Apply pagination
         page = self.paginate_queryset(posts)
@@ -103,7 +108,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     pagination_class = CommentPagination
     
     def perform_create(self, serializer):
@@ -143,29 +148,20 @@ class CommentViewSet(viewsets.ModelViewSet):
             )
         
         return super().create(request, *args, **kwargs)
-    
 
-
-class FeedPagination(PageNumberPagination):
-    page_size = 15
-    page_size_query_param = 'page_size'
-    max_page_size = 50
-
-class FeedView(APIView):
+class FeedView(generics.GenericAPIView):
     """
     View to get posts from users that the current user follows
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     pagination_class = FeedPagination
     
     def get(self, request):
         # Get users that the current user is following
         following_users = request.user.following.all()
         
-        # Get posts from followed users
-        posts = Post.objects.filter(
-            author__in=following_users
-        ).select_related('author').prefetch_related('comments')
+        # Get posts from followed users, ordered by creation date (most recent first)
+        posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
         
         # Apply pagination
         paginator = FeedPagination()
@@ -185,8 +181,3 @@ class FeedView(APIView):
             context={'request': request}
         )
         return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def feed(self, request):
-        """Alternative feed endpoint as an action"""
-        return self.get(request)    
