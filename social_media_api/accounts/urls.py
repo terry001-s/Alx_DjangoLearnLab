@@ -10,7 +10,7 @@ from .views import (
     FollowingListView,
     FollowersListView,
     UserFollowStatusView,
-    UserListView  # Add this import
+    UserListView
 )
 
 urlpatterns = [
@@ -22,11 +22,17 @@ urlpatterns = [
     # Profile endpoints
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('users/<str:username>/', UserDetailView.as_view(), name='user-detail'),
-    path('users/', UserListView.as_view(), name='user-list'),  # Add this line
+    path('users/', UserListView.as_view(), name='user-list'),
     
-    # Follow management endpoints
-    path('follow/', FollowUserView.as_view(), name='follow-user'),
-    path('unfollow/', UnfollowUserView.as_view(), name='unfollow-user'),
+    # Follow management endpoints - with user_id in URL
+    path('follow/<int:user_id>/', FollowUserView.as_view(), name='follow-user'),
+    path('unfollow/<int:user_id>/', UnfollowUserView.as_view(), name='unfollow-user'),
+    
+    # Alternative follow endpoints (without URL parameter) - keep for backward compatibility
+    path('follow/', FollowUserView.as_view(), name='follow-user-alternative'),
+    path('unfollow/', UnfollowUserView.as_view(), name='unfollow-user-alternative'),
+    
+    # Follow lists endpoints
     path('following/', FollowingListView.as_view(), name='following-list'),
     path('followers/', FollowersListView.as_view(), name='followers-list'),
     path('follow-status/<int:user_id>/', UserFollowStatusView.as_view(), name='follow-status'),

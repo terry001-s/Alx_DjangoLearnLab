@@ -97,12 +97,25 @@ class UserDetailView(generics.GenericAPIView):
 class FollowUserView(generics.GenericAPIView):
     """View to follow another user"""
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = FollowActionSerializer
     
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            user_to_follow = get_object_or_404(CustomUser.objects.all(), id=serializer.validated_data['user_id'])
+    def post(self, request, user_id=None):
+        # Get user_id from URL parameter if provided, otherwise from request body
+        if user_id is None:
+            # Try to get user_id from request body (for backward compatibility)
+            serializer = FollowActionSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                user_id = serializer.validated_data['user_id']
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user_to_follow = CustomUser.objects.all().get(id=user_id)
+            
+            # Check if trying to follow self
+            if request.user.id == user_id:
+                return Response({
+                    'error': 'Cannot follow yourself.'
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             if request.user.follow(user_to_follow):
                 return Response({
@@ -115,17 +128,25 @@ class FollowUserView(generics.GenericAPIView):
                     'error': f'You are already following {user_to_follow.username}'
                 }, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 class UnfollowUserView(generics.GenericAPIView):
     """View to unfollow another user"""
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = FollowActionSerializer
     
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            user_to_unfollow = get_object_or_404(CustomUser.objects.all(), id=serializer.validated_data['user_id'])
+    def post(self, request, user_id=None):
+        # Get user_id from URL parameter if provided, otherwise from request body
+        if user_id is None:
+            # Try to get user_id from request body (for backward compatibility)
+            serializer = FollowActionSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                user_id = serializer.validated_data['user_id']
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user_to_unfollow = CustomUser.objects.all().get(id=user_id)
             
             if request.user.unfollow(user_to_unfollow):
                 return Response({
@@ -138,7 +159,8 @@ class UnfollowUserView(generics.GenericAPIView):
                     'error': f'You are not following {user_to_unfollow.username}'
                 }, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 class FollowingListView(generics.GenericAPIView):
     """View to list users that the current user is following"""
