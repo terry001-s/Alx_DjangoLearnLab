@@ -157,8 +157,8 @@ class LikeView(generics.GenericAPIView):
     
     def post(self, request, pk):
         """Like or unlike a post"""
-        # Use get_object_or_404 to get the post
-        post = get_object_or_404(Post, pk=pk)
+        # Use generics.get_object_or_404 to get the post
+        post = generics.get_object_or_404(Post, pk=pk)
         
         # Use Like.objects.get_or_create to like the post
         like, created = Like.objects.get_or_create(
