@@ -1,10 +1,10 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, filters, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer, PostCreateSerializer
 from .permissions import IsOwnerOrReadOnly
@@ -194,42 +194,32 @@ class LikeView(generics.GenericAPIView):
     """View to like or unlike a post"""
     permission_classes = [permissions.IsAuthenticated]
     
-    def post(self, request, pk):
-        """Like or unlike a post"""
-        # Use get_object_or_404 exactly as specified
-        post = get_object_or_404(Post, pk=pk)
-        
-        # Use Like.objects.get_or_create exactly as specified
-        like, created = Like.objects.get_or_create(
-            user=request.user, 
-            post=post
-        )
-        
-        if created:
-            # Create notification using Notification.objects.create
-            Notification.objects.create(
-                recipient=post.author,
-                actor=request.user,
-                verb=f"liked your post: {post.title}",
-                notification_type='like',
-                target_content_type=ContentType.objects.get_for_model(Post),
-                target_object_id=post.id
-            )
-            
-            return Response({
-                'message': 'Post liked successfully',
-                'liked': True,
-                'likes_count': post.likes.count()
-            }, status=status.HTTP_200_OK)
-        else:
-            # Unlike if already exists
-            like.delete()
-            return Response({
-                'message': 'Post unliked successfully',
-                'liked': False,
-                'likes_count': post.likes.count()
-            }, status=status.HTTP_200_OK)
-
+def post(self, request, pk):
+    """Like or unlike a post"""
+    # Use get_object_or_404 exactly as specified
+    post = get_object_or_404(Post, pk=pk)
+    
+    # Use Like.objects.get_or_create exactly as specified
+    like, created = Like.objects.get_or_create(
+        user=request.user, 
+        post=post
+    )
+    
+    if created:
+        # ... rest of your code for creating notification ...
+        return Response({
+            'message': 'Post liked successfully',
+            'liked': True,
+            'likes_count': post.likes.count()
+        }, status=status.HTTP_200_OK)
+    else:
+        # Unlike if already exists
+        like.delete()
+        return Response({
+            'message': 'Post unliked successfully',
+            'liked': False,
+            'likes_count': post.likes.count()
+        }, status=status.HTTP_200_OK)
 
 class PostLikesView(generics.GenericAPIView):
     """View to get users who liked a post"""
