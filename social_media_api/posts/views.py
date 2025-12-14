@@ -188,6 +188,24 @@ class LikeView(generics.GenericAPIView):
                 'liked': False,
                 'likes_count': post.likes.count()
             }, status=status.HTTP_200_OK)
+    
+    def delete(self, request, pk):
+        """Unlike a post (alternative endpoint)"""
+        # Get the post
+        post = generics.get_object_or_404(Post, pk=pk)
+        
+        try:
+            like = Like.objects.get(user=request.user, post=post)
+            like.delete()
+            return Response({
+                'message': 'Post unliked successfully',
+                'liked': False,
+                'likes_count': post.likes.count()
+            }, status=status.HTTP_200_OK)
+        except Like.DoesNotExist:
+            return Response({
+                'error': 'You have not liked this post'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class PostLikesView(generics.GenericAPIView):
     """View to get users who liked a post"""

@@ -12,5 +12,6 @@ urlpatterns = [
     
     # Like endpoints
     path('posts/<int:pk>/like/', LikeView.as_view(), name='post-like'),
+    path('posts/<int:pk>/unlike/', LikeView.as_view(), name='post-unlike'),
     path('posts/<int:pk>/likes/', PostLikesView.as_view(), name='post-likes'),
 ]
