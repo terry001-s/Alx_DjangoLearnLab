@@ -11,6 +11,8 @@ from .permissions import IsOwnerOrReadOnly
 import django_filters
 from .models import Like
 from notifications.utils import create_like_notification, create_comment_notification
+from notifications.models import Notification
+from django.contrib.contenttypes.models import ContentType
 
 # Custom pagination class
 class PostPagination(PageNumberPagination):
@@ -194,17 +196,25 @@ class LikeView(generics.GenericAPIView):
     
     def post(self, request, pk):
         """Like or unlike a post"""
-        try:
-            post = Post.objects.get(id=pk)
-        except Post.DoesNotExist:
-            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+        # Use get_object_or_404 exactly as specified
+        post = get_object_or_404(Post, pk=pk)
         
-        # Toggle like
-        liked, like_instance = Like.toggle_like(request.user, post)
+        # Use Like.objects.get_or_create exactly as specified
+        like, created = Like.objects.get_or_create(
+            user=request.user, 
+            post=post
+        )
         
-        if liked:
-            # Create notification for like
-            create_like_notification(post, request.user)
+        if created:
+            # Create notification using Notification.objects.create
+            Notification.objects.create(
+                recipient=post.author,
+                actor=request.user,
+                verb=f"liked your post: {post.title}",
+                notification_type='like',
+                target_content_type=ContentType.objects.get_for_model(Post),
+                target_object_id=post.id
+            )
             
             return Response({
                 'message': 'Post liked successfully',
@@ -212,11 +222,14 @@ class LikeView(generics.GenericAPIView):
                 'likes_count': post.likes.count()
             }, status=status.HTTP_200_OK)
         else:
+            # Unlike if already exists
+            like.delete()
             return Response({
                 'message': 'Post unliked successfully',
                 'liked': False,
                 'likes_count': post.likes.count()
             }, status=status.HTTP_200_OK)
+
 
 class PostLikesView(generics.GenericAPIView):
     """View to get users who liked a post"""
