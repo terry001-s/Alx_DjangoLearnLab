@@ -10,6 +10,7 @@ from .serializers import (
     UserProfileSerializer, UserFollowSerializer, FollowActionSerializer
 )
 from .models import CustomUser
+from notifications.utils import create_follow_notification
 
 User = get_user_model()
 
@@ -225,3 +226,5 @@ class UserListView(generics.GenericAPIView):
             context={'request': request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+

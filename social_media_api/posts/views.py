@@ -9,6 +9,8 @@ from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer, PostCreateSerializer
 from .permissions import IsOwnerOrReadOnly
 import django_filters
+from .models import Like
+from notifications.utils import create_like_notification, create_comment_notification
 
 # Custom pagination class
 class PostPagination(PageNumberPagination):
@@ -113,6 +115,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+         # Create notification for comment
+        create_comment_notification(comment)
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -181,3 +186,61 @@ class FeedView(generics.GenericAPIView):
             context={'request': request}
         )
         return Response(serializer.data)
+    
+
+class LikeView(generics.GenericAPIView):
+    """View to like or unlike a post"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, pk):
+        """Like or unlike a post"""
+        try:
+            post = Post.objects.get(id=pk)
+        except Post.DoesNotExist:
+            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Toggle like
+        liked, like_instance = Like.toggle_like(request.user, post)
+        
+        if liked:
+            # Create notification for like
+            create_like_notification(post, request.user)
+            
+            return Response({
+                'message': 'Post liked successfully',
+                'liked': True,
+                'likes_count': post.likes.count()
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'message': 'Post unliked successfully',
+                'liked': False,
+                'likes_count': post.likes.count()
+            }, status=status.HTTP_200_OK)
+
+class PostLikesView(generics.GenericAPIView):
+    """View to get users who liked a post"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, pk):
+        """Get list of users who liked the post"""
+        try:
+            post = Post.objects.get(id=pk)
+        except Post.DoesNotExist:
+            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        likes = post.likes.select_related('user').all()
+        
+        # Paginate results
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        page = paginator.paginate_queryset(likes, request)
+        
+        if page is not None:
+            from .serializers import LikeSerializer
+            serializer = LikeSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        
+        from .serializers import LikeSerializer
+        serializer = LikeSerializer(likes, many=True)
+        return Response(serializer.data)    

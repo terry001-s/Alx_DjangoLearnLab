@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, Comment
+from .models import Like, Post, Comment
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -71,3 +71,48 @@ class PostCreateSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user'):
             validated_data['author'] = request.user
         return super().create(validated_data)
+    
+class LikeSerializer(serializers.ModelSerializer):
+    """Serializer for likes"""
+    user = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = Like
+        fields = ['id', 'user', 'post', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+class PostSerializer(serializers.ModelSerializer):
+    """Serializer for posts"""
+    author = UserSerializer(read_only=True)
+    author_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), 
+        source='author', 
+        write_only=True
+    )
+    comments_count = serializers.IntegerField(read_only=True)
+    likes_count = serializers.IntegerField(read_only=True)
+    is_liked = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Post
+        fields = ['id', 'author', 'author_id', 'title', 'content', 
+                  'comments_count', 'likes_count', 'is_liked', 'comments', 
+                  'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'author', 
+                           'comments_count', 'likes_count']
+    
+    def get_is_liked(self, obj):
+        """Check if current user has liked this post"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return Like.has_liked(request.user, obj)
+        return False
+    
+    def create(self, validated_data):
+        # Set the author to the current user
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['author'] = request.user
+        
+        return super().create(validated_data)    

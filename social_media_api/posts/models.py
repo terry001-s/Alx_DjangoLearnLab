@@ -51,3 +51,40 @@ class Comment(models.Model):
     
     def __str__(self):
         return f"Comment by {self.author.username} on {self.post.title}"
+    
+
+class Like(models.Model):
+    """Model for post likes"""
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='likes'
+    )
+    post = models.ForeignKey(
+        Post, 
+        on_delete=models.CASCADE, 
+        related_name='likes'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'post']  # Prevent duplicate likes
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} likes {self.post.title}"
+    
+    @classmethod
+    def toggle_like(cls, user, post):
+        """Toggle like status for a post"""
+        like, created = cls.objects.get_or_create(user=user, post=post)
+        if not created:
+            # Unlike if already liked
+            like.delete()
+            return False, None
+        return True, like
+    
+    @classmethod
+    def has_liked(cls, user, post):
+        """Check if user has liked a post"""
+        return cls.objects.filter(user=user, post=post).exists()    
