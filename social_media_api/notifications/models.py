@@ -41,16 +41,13 @@ class Notification(models.Model):
     
     # Status fields
     is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True)  # Add timestamp field
     
     class Meta:
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['recipient', 'is_read', 'created_at']),
-        ]
+        ordering = ['-timestamp']
     
     def __str__(self):
-        return f"{self.actor.username} {self.verb} - {self.recipient.username}"
+        return f"{self.actor.username} {self.verb} at {self.timestamp}"
     
     def mark_as_read(self):
         """Mark notification as read"""
