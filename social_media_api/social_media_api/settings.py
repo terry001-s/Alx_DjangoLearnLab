@@ -181,7 +181,6 @@ if not DEBUG:
 else:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-# Database configuration for production
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -195,6 +194,11 @@ if 'DATABASE_URL' in os.environ:
         conn_max_age=600,
         ssl_require=True
     )
+    
+    # Explicitly set PORT for PostgreSQL
+    if DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
+        # Set default PostgreSQL port if not specified
+        DATABASES['default']['PORT'] = DATABASES['default'].get('PORT', '5432')
 
 # Static files configuration for production
 STATIC_URL = '/static/'
