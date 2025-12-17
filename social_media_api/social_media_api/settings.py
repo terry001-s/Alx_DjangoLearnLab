@@ -144,3 +144,125 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
+
+# Production settings - override development settings
+import os
+import dj_database_url
+from decouple import config
+
+# Check if running in production
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+# Security settings for production
+if not DEBUG:
+    # Security settings
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # HSTS settings
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Allowed hosts
+    ALLOWED_HOSTS = [
+        'localhost',
+        '127.0.0.1',
+        '.yourdomain.com',  # Add your domain
+        '.herokuapp.com',   # For Heroku
+        '.onrender.com',    # For Render
+    ]
+else:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+# Database configuration for production
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# Use PostgreSQL in production if DATABASE_URL is set
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,
+        ssl_require=True
+    )
+
+# Static files configuration for production
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+# Media files configuration
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# For production, use S3 or similar for media files
+if not DEBUG:
+    # AWS S3 configuration (optional)
+    # AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+    # AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+    # AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+    # AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
+    # DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+    pass
+
+# CORS settings for production
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        'https://yourdomain.com',
+        'https://www.yourdomain.com',
+    ]
+else:
+    CORS_ALLOW_ALL_ORIGINS = True
+
+# Logging configuration for production
+if not DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+                'style': '{',
+            },
+            'simple': {
+                'format': '{levelname} {message}',
+                'style': '{',
+            },
+        },
+        'handlers': {
+            'file': {
+                'level': 'ERROR',
+                'class': 'logging.FileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs/django.log'),
+                'formatter': 'verbose',
+            },
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'simple',
+            },
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['file', 'console'],
+                'level': 'ERROR',
+                'propagate': True,
+            },
+            'social_media_api': {
+                'handlers': ['file', 'console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+        },
+    }

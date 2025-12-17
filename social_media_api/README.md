@@ -74,3 +74,20 @@ curl -X POST http://localhost:8000/api/posts/ \
     "title": "My Awesome Post",
     "content": "This is the content of my post."
   }'  
+
+
+
+  # Deployment Guide
+
+## Prerequisites
+- Python 3.11+
+- PostgreSQL (for production)
+- Git
+- Virtual environment
+
+## Local Development Setup
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd social_media_api
