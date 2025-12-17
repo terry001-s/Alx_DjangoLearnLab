@@ -167,7 +167,9 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    
+     
+    DEBUG = False
+
     # Allowed hosts
     ALLOWED_HOSTS = [
         'localhost',
